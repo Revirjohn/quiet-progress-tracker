@@ -210,6 +210,25 @@
         <input type="range" id="motivSlider" min="1" max="10" value="5" />
       </div>
     </div>
+<div class="sec-title">Body Progress <small>saved daily</small></div>
+<div class="card">
+  <div class="setrow">
+    <label for="weightInput">⚖️ Today's weight</label>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <input
+        class="txt"
+        type="number"
+        id="weightInput"
+        inputmode="decimal"
+        min="30"
+        max="300"
+        step="0.1"
+        placeholder="e.g. 99.0"
+      />
+      <span style="font-size:13px;font-weight:700;">kg</span>
+    </div>
+  </div>
+</div>
     <div class="hint">Tap the circle on the right to mark a habit done ✓ · Saved automatically on this device.</div>
   </div>
 
@@ -301,9 +320,11 @@ function parseKey(k){ const [y,m]=k.split("-").map(Number); return {y, m:m-1}; }
 function daysInMonth(k){ const {y,m}=parseKey(k); return new Date(y,m+1,0).getDate(); }
 function weekIdx(day){ return Math.min(Math.floor((day-1)/7),4); }
 function mdata(k){
-  if(!store.months[k]) store.months[k]={checks:{},mood:{},motivation:{}};
-  const d=store.months[k];
-  d.checks=d.checks||{}; d.mood=d.mood||{}; d.motivation=d.motivation||{};
+if(!store.months[k]) store.months[k]={checks:{},mood:{},motivation:{},weight:{}};  const d=store.months[k];
+  d.checks=d.checks||{};
+d.mood=d.mood||{};
+d.motivation=d.motivation||{};
+d.weight=d.weight||{};
   return d;
 }
 function isOn(k,h,day){ return !!mdata(k).checks[h+"_"+day]; }
@@ -407,6 +428,28 @@ function renderToday(){
   ms.onchange=()=>{mdata(cur).mood[day]=+ms.value;save();renderStats();};
   mvs.oninput=()=>{document.getElementById("motivVal").textContent=mvs.value;};
   mvs.onchange=()=>{mdata(cur).motivation[day]=+mvs.value;save();renderStats();};
+  const wi=document.getElementById("weightInput");
+
+if(wi){
+  wi.value = md.weight[day] != null ? md.weight[day] : "";
+
+  wi.onchange=()=>{
+    const val=parseFloat(wi.value);
+
+    if(Number.isFinite(val) && val>=30 && val<=300){
+      md.weight[day]=Math.round(val*10)/10;
+      save();
+      wi.value=md.weight[day].toFixed(1);
+      toast("Weight saved ✓");
+    } else if(wi.value===""){
+      delete md.weight[day];
+      save();
+    } else {
+      toast("Enter a weight between 30–300 kg");
+      wi.value=md.weight[day] != null ? md.weight[day].toFixed(1) : "";
+    }
+  };
+}
 }
 
 function renderMonth(){
